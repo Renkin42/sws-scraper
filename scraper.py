@@ -21,4 +21,7 @@ payload = {
 }
 
 res = s.post(login_url, data=payload)
-print(res.url)
+res_html = BeautifulSoup(res.text, "html.parser")
+days = res_html.find("div", {"id":"calendar"}).find("div", {"class":"dates"}).find("ul", {"class":"days"}).find_all("li", recursive=False)
+for day in days:
+    print(day.get_text())
