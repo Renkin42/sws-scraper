@@ -1,15 +1,24 @@
 from bs4 import BeautifulSoup
 import requests
-URL = "http://testphp.vulnweb.com/userinfo.php"
+import os
+
+login_url = "https://myschedule.safeway.com/ESS/AuthN/Swylogin.aspx?ReturnUrl=%2fESS%2f"
+sw_id = os.getenv("SW_ID")
+sw_pass = os.getenv("SW_PASS")
+
+with requests.session() as s:
+    req = s.get(login_url).text
+    html = BeautifulSoup(req, "html.parser")
+    viewstate = html.find("input", {"name":"__VIEWSTATE"}).attrs["value"]
+    viewstategen = html.find("input", {"name":"__VIEWSTATEGENERATOR"}).attrs["value"]
 
 payload = {
-    "uname":"test",
-    "pass":"test"
+    "__VIEWSTATE": viewstate,
+    "__VIEWSTATEGENERATOR": viewstategen,
+    "EmpID": sw_id,
+    "Password": sw_pass,
+    "btnLogin":"Login"
 }
-s = requests.session()
-response = s.post(URL, data=payload)
-print(response.status_code)
 
-soup = BeautifulSoup(response.content, "html.parser")
-protected_content = soup.find(attrs={"id":"pageName"}).text
-print(protected_content)
+res = s.post(login_url, data=payload)
+print(res.url)

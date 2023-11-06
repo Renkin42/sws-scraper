@@ -12,6 +12,13 @@ Progress
 --------
 
 - [x] Scraper proof of concept
+- [x] Login to mySchedule
 - [ ] Scrape data from mySchedule
 - [ ] Implement Bitwarden CLI
 - [ ] Add CalDAV server 
+
+Environment Variables
+---------------------
+
+- `SW_ID` : Employee ID Number
+- `SW_PASS` : Employee Password
