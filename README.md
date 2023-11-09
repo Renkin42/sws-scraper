@@ -13,7 +13,7 @@ Progress
 
 - [x] Scraper proof of concept
 - [x] Login to mySchedule
-- [ ] Scrape data from mySchedule
+- [x] Scrape data from mySchedule
 - [ ] Implement Bitwarden CLI
 - [ ] Add CalDAV server 
 
