@@ -83,10 +83,30 @@ payload = {
     "__VIEWSTATEGENERATOR":viewstategen,
     "ActiveTab":"ctl00_hdnActiveTab",
     "__AjaxControlToolkitCalendarCssLoaded":"",
-    "__ASYNCPOST":"true"
+    "__ASYNCPOST":"false"
 }
 res = s.post(res.url, data=payload)
 res_html = BeautifulSoup(res.text, "html.parser")
 
-print(res.text)
+days = res_html.find("div", {"id":"calendar"}).find("div", {"class":"dates"}).find("ul", {"class":"days"}).find_all("li", recursive=False)
+for day in days:
+    date = day.find("div", {"class":"date"})
+    if date:
+        event_year = now.year
+        event_month, event_day = date.get_text().split("/")
+        event_month = int(event_month)
+        event_day = int(event_day)
+        if now.month == 12 and event_month == 1:
+            event_year += 1
+        hours = day.find("span", {"class":"hours"})
+        if hours:
+            shift+=1
+            print("Shift " + str(shift))
+            start_time, end_time = hours.get_text().split(" - ")
+            start_hour, start_min = convert24(start_time)
+            end_hour, end_min = convert24(end_time)
+            event_start = datetime(event_year, event_month, event_day, start_hour, start_min)
+            print(event_start)
+            event_end = datetime(event_year, event_month, event_day, end_hour, end_min)
+            print(event_end)
 
