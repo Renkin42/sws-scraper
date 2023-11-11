@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 import requests
 import os
+import re
 from datetime import datetime
 from datetime import timedelta
 
@@ -37,34 +38,12 @@ payload = {
 res = s.post(login_url, data=payload)
 res_html = BeautifulSoup(res.text, "html.parser")
 days = res_html.find("div", {"id":"calendar"}).find("div", {"class":"dates"}).find("ul", {"class":"days"}).find_all("li", recursive=False)
-shift = 0
-now = datetime.now()
-for day in days:
-    date = day.find("div", {"class":"date"})
-    if date:
-        event_year = now.year
-        event_month, event_day = date.get_text().split("/")
-        event_month = int(event_month)
-        event_day = int(event_day)
-        if now.month == 12 and event_month == 1:
-            event_year += 1
-        hours = day.find("span", {"class":"hours"})
-        if hours:
-            shift+=1
-            print("Shift " + str(shift))
-            start_time, end_time = hours.get_text().split(" - ")
-            start_hour, start_min = convert24(start_time)
-            end_hour, end_min = convert24(end_time)
-            event_start = datetime(event_year, event_month, event_day, start_hour, start_min)
-            print(event_start)
-            event_end = datetime(event_year, event_month, event_day, end_hour, end_min)
-            print(event_end)
 
 viewstate = res_html.find("input", {"name":"__VIEWSTATE"}).attrs["value"]
 viewstategen = res_html.find("input", {"name":"__VIEWSTATEGENERATOR"}).attrs["value"]
+now = datetime.now()
 offset = 7 - (now.weekday() + 1) % 7
 now += timedelta(days = offset)
-print(now.strftime("%m/%d/%Y"))
 payload = {
     "ctl00$Master_ScriptManager":"ctl00$masterPlaceHolder$UpdatePanel1|ctl00$masterPlaceHolder$txtWeekPeriodDate",
     "phTree":"ctl00_tpTransfer_phTree",
@@ -88,7 +67,10 @@ payload = {
 res = s.post(res.url, data=payload)
 res_html = BeautifulSoup(res.text, "html.parser")
 
-days = res_html.find("div", {"id":"calendar"}).find("div", {"class":"dates"}).find("ul", {"class":"days"}).find_all("li", recursive=False)
+days += res_html.find("div", {"id":"calendar"}).find("div", {"class":"dates"}).find("ul", {"class":"days"}).find_all("li", recursive=False)
+
+shift = 0
+now = datetime.now()
 for day in days:
     date = day.find("div", {"class":"date"})
     if date:
@@ -109,4 +91,7 @@ for day in days:
             print(event_start)
             event_end = datetime(event_year, event_month, event_day, end_hour, end_min)
             print(event_end)
-
+            job_string = "Work: " + (day.find(string=re.compile("Job:")).split("."))[1]
+            print(job_string)
+            store_string = "Safeway Store #" + day.find(string=re.compile("Store:"))[7:]
+            print(store_string)
