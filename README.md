@@ -22,3 +22,5 @@ Environment Variables
 
 - `SW_ID` : Employee ID Number
 - `SW_PASS` : Employee Password
+- `RADICALE_USER` : CalDAV Server Username
+- `RADICALE_PASSWORD` : CalDAV Server Password

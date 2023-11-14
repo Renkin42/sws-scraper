@@ -1,7 +1,7 @@
-FROM python
+FROM debian:stable-slim
 MAINTAINER Austin Leydecker
-ADD scraper.py /home/scraper.py
-ADD requirements.txt /home/requirements.txt
-RUN pip install -r /home/requirements.txt
-CMD ["/home/scraper.py"]
-ENTRYPOINT ["python3"]
+ADD scripts/ /scripts/
+ADD radicale/ /radicale/
+RUN apt update && apt install -y python3-pip
+RUN pip install -r /scripts/requirements.txt
+ENTRYPOINT ["/scripts/start.sh"]
