@@ -1,23 +1,25 @@
-FROM debian:stable-slim
+FROM python
 MAINTAINER Austin Leydecker
 
 #Install dependencies
 RUN apt update
-RUN apt install -y cron python3-pip
-RUN pip install -r /scripts/requirements.tx
+RUN apt install -y cron
 
 #Add directories
+RUN mkdir /radicale/
 RUN mkdir /radicale/data/ 
 RUN mkdir /scripts/
 #Add python & shell scripts
-COPY scripts/ /scripts/
+ADD scripts/ /scripts/
+RUN pip install -r /scripts/requirements.txt
 #Add radicale config
-COPY radicale/ /radicale/
+ADD radicale/ /radicale/
 
 #Add crontab
-COPY scraper-cron /etc/cron.d/scraper-cron
+ADD scraper-cron /etc/cron.d/scraper-cron
 RUN chmod 0644 /etc/cron.d/scraper-cron
 RUN touch /var/log/cron.log
 RUN crontab /etc/cron.d/scraper-cron
+RUN chmod +x /scripts/start.sh
 
-ENTRYPOINT ["/scripts/start.sh"]
+CMD ["/scripts/start.sh"]

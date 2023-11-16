@@ -4,6 +4,7 @@ import os
 import re
 from datetime import datetime
 from datetime import timedelta
+import caldav
 
 def convert24(time_string):
     ampm = time_string[-1:]
@@ -41,9 +42,9 @@ days = res_html.find("div", {"id":"calendar"}).find("div", {"class":"dates"}).fi
 
 viewstate = res_html.find("input", {"name":"__VIEWSTATE"}).attrs["value"]
 viewstategen = res_html.find("input", {"name":"__VIEWSTATEGENERATOR"}).attrs["value"]
-now = datetime.now()
+this_sunday = datetime.now()
 offset = 7 - (now.weekday() + 1) % 7
-now += timedelta(days = offset)
+this_sunday += timedelta(days = offset)
 payload = {
     "ctl00$Master_ScriptManager":"ctl00$masterPlaceHolder$UpdatePanel1|ctl00$masterPlaceHolder$txtWeekPeriodDate",
     "phTree":"ctl00_tpTransfer_phTree",
@@ -54,7 +55,7 @@ payload = {
     "ctl00_tabContainer_ClientState":'{"ActiveTabIndex":0, "TabState":[true,true,true]}',
     "ctl00$hdnActiveTab":"",
     "ctl00$masterPlaceHolder$ddlDatePeriod":"SPECIFIC_DATE",
-    "ctl00$masterPlaceHolder$txtWeekPeriodDate":now.strftime("%m/%d/%Y"),
+    "ctl00$masterPlaceHolder$txtWeekPeriodDate":this_sunday.strftime("%m/%d/%Y"),
     "__EVENTTARGET":"ctl00$masterPlaceHolder$txtWeekPeriodDate",
     "__EVENTARGUMENT":"",
     "__LASTFOCUS":"",
@@ -69,7 +70,7 @@ res_html = BeautifulSoup(res.text, "html.parser")
 
 days += res_html.find("div", {"id":"calendar"}).find("div", {"class":"dates"}).find("ul", {"class":"days"}).find_all("li", recursive=False)
 
-shift = 0
+shifts = []
 now = datetime.now()
 for day in days:
     date = day.find("div", {"class":"date"})
@@ -82,16 +83,40 @@ for day in days:
             event_year += 1
         hours = day.find("span", {"class":"hours"})
         if hours:
-            shift+=1
-            print("Shift " + str(shift))
             start_time, end_time = hours.get_text().split(" - ")
             start_hour, start_min = convert24(start_time)
             end_hour, end_min = convert24(end_time)
             event_start = datetime(event_year, event_month, event_day, start_hour, start_min)
-            print(event_start)
             event_end = datetime(event_year, event_month, event_day, end_hour, end_min)
-            print(event_end)
             job_string = "Work: " + (day.find(string=re.compile("Job:")).split("."))[1]
-            print(job_string)
             store_string = "Safeway Store #" + day.find(string=re.compile("Store:"))[7:]
-            print(store_string)
+
+            event_data = {
+                "title":job_string,
+                "location":store_string,
+                "start":event_start,
+                "end":event_end
+            }
+            shifts.append(event_data)
+
+caldav_url = "http://localhost:5232/"
+caldav_user = os.getenv("RADICALE_USER")
+caldav_password = os.getenv("RADICALE_PASSWORD")
+
+with caldav.DAVClient(
+    url = caldav_url,
+    username = caldav_user,
+    password = caldav_password
+) as client:
+    principal = client.principal()
+    calendar = principal.calendar(name="Work Schedule")
+    last_sunday = this_sunday - timedelta(days=7)
+    next_sunday = this_sunday + timedelta(days=7)
+    fetched_events = calendar.search(
+        start = last_sunday,
+        end = next_sunday,
+        event = True,
+        expand = True
+    )
+    for event in fetched_events:
+        
