@@ -1,0 +1,2 @@
+0 15 * * * python3 /scripts/scraper.py >> /var/log/cron.log 2>&1
+
