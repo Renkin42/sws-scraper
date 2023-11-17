@@ -4,7 +4,6 @@ import os
 import re
 from datetime import datetime
 from datetime import timedelta
-import caldav
 
 def convert24(time_string):
     ampm = time_string[-1:]
@@ -97,12 +96,14 @@ for day in days:
                 "start":event_start,
                 "end":event_end
             }
+            print(event_data)
             shifts.append(event_data)
 
 caldav_url = "http://localhost:5232/"
 caldav_user = os.getenv("RADICALE_USER")
 caldav_password = os.getenv("RADICALE_PASSWORD")
 
+"""
 with caldav.DAVClient(
     url = caldav_url,
     username = caldav_user,
@@ -120,3 +121,4 @@ with caldav.DAVClient(
     )
     for event in fetched_events:
         
+"""
