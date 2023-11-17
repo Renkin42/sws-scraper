@@ -11,7 +11,7 @@ RUN mkdir /radicale/data/
 RUN mkdir /scripts/
 #Add python & shell scripts
 ADD scripts/ /scripts/
-RUN pip install -r /scripts/requirements.txt
+RUN pip install radicale caldav
 #Add radicale config
 ADD radicale/ /radicale/
 
@@ -22,4 +22,4 @@ RUN touch /var/log/cron.log
 RUN crontab /etc/cron.d/scraper-cron
 RUN chmod +x /scripts/start.sh
 
-CMD ["/scripts/start.sh"]
+ENTRYPOINT cron -f
