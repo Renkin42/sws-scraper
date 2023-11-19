@@ -1,4 +1,4 @@
-@reboot /venv/bin/python3 -m radicale --config /radicale/config >> /var/log/cron.log 2>&1
-@reboot /venv/bin/python3 /scripts/scraper.py > /proc/1/fd/1 2>/proc/1/fd/2
-0 15 * * * /venv/bin/python3 /scripts/scraper.py >> /var/log/cron.log 2>&1
+@reboot /venv/bin/python3 -m radicale --config /radicale/config > /proc/1/df/1 2>/proc/1/fd/2
+@reboot sleep 30 && /venv/bin/python3 /scripts/scraper.py > /proc/1/fd/1 2>/proc/1/fd/2
+0 15 * * * /venv/bin/python3 /scripts/scraper.py > /proc/1/fd/1 2>/proc/1/fd/2
 

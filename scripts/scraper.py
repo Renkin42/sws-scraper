@@ -42,7 +42,7 @@ days = res_html.find("div", {"id":"calendar"}).find("div", {"class":"dates"}).fi
 viewstate = res_html.find("input", {"name":"__VIEWSTATE"}).attrs["value"]
 viewstategen = res_html.find("input", {"name":"__VIEWSTATEGENERATOR"}).attrs["value"]
 this_sunday = datetime.now()
-offset = 7 - (now.weekday() + 1) % 7
+offset = 7 - (this_sunday.weekday() + 1) % 7
 this_sunday += timedelta(days = offset)
 payload = {
     "ctl00$Master_ScriptManager":"ctl00$masterPlaceHolder$UpdatePanel1|ctl00$masterPlaceHolder$txtWeekPeriodDate",

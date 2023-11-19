@@ -24,4 +24,6 @@ RUN chmod 0644 /etc/cron.d/scraper-cron
 RUN touch /var/log/cron.log
 RUN crontab /etc/cron.d/scraper-cron
 
-ENTRYPOINT cron -f
+RUN chmod 744 /scripts/start.sh
+
+ENTRYPOINT /scripts/start.sh
