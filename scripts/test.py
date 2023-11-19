@@ -2,10 +2,15 @@ import caldav
 import os
 from datetime import datetime
 from datetime import timedelta
- 
-caldav_url = "http://localhost:5232/"
+import pytz
+
+caldav_url = "http://localhost:5232"
 caldav_user = os.getenv("RADICALE_USER")
 caldav_password = os.getenv("RADICALE_PASSWORD")
+if os.getenv("TZ"):
+    tz = pytz.timezone(os.getenv("TZ"))
+else:
+    tz = pytz.utc
 
 with caldav.DAVClient(
     url = caldav_url,
@@ -13,13 +18,16 @@ with caldav.DAVClient(
     password = caldav_password
 ) as client:
     principal = client.principal()
-    calendar = principal.calendar(name="Work Schedule")
+    try:
+        calendar = principal.calendar(name="Work Schedule")
+    except caldav.error.NotFoundError:
+        calendar = principal.make_calendar(name="Work Schedule")
     this_sunday = datetime.now() + timedelta(days=(7-(datetime.now().weekday()+1)%7))
     last_sunday = this_sunday - timedelta(days=7)
     next_sunday = this_sunday + timedelta(days=7)
     calendar.save_event(
-        dtstart=datetime(2023,11,16,8),
-        dtend=datetime(2023,11,16,12),
+        dtstart=datetime(2023,11,20,8,tzinfo=tz),
+        dtend=datetime(2023,11,20,12,tzinfo=tz),
         summary="Work: Produce Fresh Clerk"
     )
     fetched_events = calendar.search(
@@ -29,4 +37,9 @@ with caldav.DAVClient(
         expand = True
     )
     for event in fetched_events:
-        print(event.data)
+        event_data = {
+            "title":str(event.icalendar_component.get("summary")),
+            "start":event.icalendar_component.get("dtstart").dt,
+            "end":event.icalendar_component.get("dtend").dt
+        }
+        print(event_data)
