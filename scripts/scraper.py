@@ -37,7 +37,9 @@ payload = {
 
 res = s.post(login_url, data=payload)
 res_html = BeautifulSoup(res.text, "html.parser")
-days = res_html.find("div", {"id":"calendar"}).find("div", {"class":"dates"}).find("ul", {"class":"days"}).find_all("li", recursive=False)
+days = []
+for day in res_html.css.select("#calendar .dates .days .hours"):
+    days.append(day.parent)
 
 viewstate = res_html.find("input", {"name":"__VIEWSTATE"}).attrs["value"]
 viewstategen = res_html.find("input", {"name":"__VIEWSTATEGENERATOR"}).attrs["value"]
@@ -67,7 +69,8 @@ payload = {
 res = s.post(res.url, data=payload)
 res_html = BeautifulSoup(res.text, "html.parser")
 
-days += res_html.find("div", {"id":"calendar"}).find("div", {"class":"dates"}).find("ul", {"class":"days"}).find_all("li", recursive=False)
+for day in res_html.css.select("#calendar .dates .days .hours"):
+    days.append(day.parent)
 
 shifts = []
 now = datetime.now()
@@ -75,29 +78,27 @@ for day in days:
     date = day.find("div", {"class":"date"})
     if date:
         event_year = now.year
-        event_month, event_day = date.get_text().split("/")
+        event_month, event_day = date.get_text().split("/")[:2]
         event_month = int(event_month)
         event_day = int(event_day)
         if now.month == 12 and event_month == 1:
             event_year += 1
         hours = day.find("span", {"class":"hours"})
-        if hours:
-            start_time, end_time = hours.get_text().split(" - ")
-            start_hour, start_min = convert24(start_time)
-            end_hour, end_min = convert24(end_time)
-            event_start = datetime(event_year, event_month, event_day, start_hour, start_min)
-            event_end = datetime(event_year, event_month, event_day, end_hour, end_min)
-            job_string = "Work: " + (day.find(string=re.compile("Job:")).split("."))[1]
-            store_string = "Safeway Store #" + day.find(string=re.compile("Store:"))[7:]
+        start_time, end_time = hours.get_text().split(" - ")
+        start_hour, start_min = convert24(start_time)
+        end_hour, end_min = convert24(end_time)
+        event_start = datetime(event_year, event_month, event_day, start_hour, start_min)
+        event_end = datetime(event_year, event_month, event_day, end_hour, end_min)
+        job_string = day.find(string=re.compile("Job:")).split(".")[1]
+        store_string = day.find(string=re.compile("Store:"))[7:]
 
-            event_data = {
-                "title":job_string,
-                "location":store_string,
-                "start":event_start,
-                "end":event_end
-            }
-            print(event_data)
-            shifts.append(event_data)
+        event_data = {
+            "title":"Work Safeway #" + store_string + ": " + job_string,
+            "start":event_start,
+            "end":event_end
+        }
+        print(event_data)
+        shifts.append(event_data)
 
 caldav_url = "http://localhost:5232/"
 caldav_user = os.getenv("RADICALE_USER")
