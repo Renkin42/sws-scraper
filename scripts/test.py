@@ -26,8 +26,8 @@ with caldav.DAVClient(
     last_sunday = this_sunday - timedelta(days=7)
     next_sunday = this_sunday + timedelta(days=7)
     calendar.save_event(
-        dtstart=datetime(2023,11,20,8,tzinfo=tz),
-        dtend=datetime(2023,11,20,12,tzinfo=tz),
+        dtstart=tz.localize(datetime(2023,11,20,8,0)),
+        dtend=tz.localize(datetime(2023,11,20,12,0)),
         summary="Work: Produce Fresh Clerk"
     )
     fetched_events = calendar.search(
@@ -43,3 +43,13 @@ with caldav.DAVClient(
             "end":event.icalendar_component.get("dtend").dt
         }
         print(event_data)
+        shifts = [ {
+            "title":"Work: Produce Fresh Clerk",
+            "start":tz.localize(datetime(2023,11,20,8,0)),
+            "end":tz.localize(datetime(2023,11,20,12,0))
+        } ]
+        print(shifts)
+        if event_data in shifts:
+            print("Event in list")
+        else:
+            print("Event not in list")

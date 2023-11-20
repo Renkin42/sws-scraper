@@ -4,6 +4,7 @@ import os
 import re
 from datetime import datetime
 from datetime import timedelta
+import pytz
 
 def convert24(time_string):
     ampm = time_string[-1:]
@@ -20,6 +21,10 @@ def convert24(time_string):
 login_url = "https://myschedule.safeway.com/ESS/AuthN/Swylogin.aspx?ReturnUrl=%2fESS%2f"
 sw_id = os.getenv("SW_ID")
 sw_pass = os.getenv("SW_PASS")
+if os.getenv("TZ"):
+    tz = pytz.timezone(os.getenv("TZ"))
+else:
+    tz = pytz.utc
 
 with requests.session() as s:
     req = s.get(login_url).text
@@ -87,8 +92,8 @@ for day in days:
         start_time, end_time = hours.get_text().split(" - ")
         start_hour, start_min = convert24(start_time)
         end_hour, end_min = convert24(end_time)
-        event_start = datetime(event_year, event_month, event_day, start_hour, start_min)
-        event_end = datetime(event_year, event_month, event_day, end_hour, end_min)
+        event_start = datetime(event_year, event_month, event_day, start_hour, start_min, tzinfo=tz)
+        event_end = datetime(event_year, event_month, event_day, end_hour, end_min, tzinfo=tz)
         job_string = day.find(string=re.compile("Job:")).split(".")[1]
         store_string = day.find(string=re.compile("Store:"))[7:]
 
@@ -104,14 +109,16 @@ caldav_url = "http://localhost:5232/"
 caldav_user = os.getenv("RADICALE_USER")
 caldav_password = os.getenv("RADICALE_PASSWORD")
 
-"""
 with caldav.DAVClient(
     url = caldav_url,
     username = caldav_user,
     password = caldav_password
 ) as client:
     principal = client.principal()
-    calendar = principal.calendar(name="Work Schedule")
+    try:
+        calendar = principal.calendar(name="Work Schedule")
+    except caldav.error.NotFoundError:
+        calendar = principal.make_calendar(name="Work Schedule")
     last_sunday = this_sunday - timedelta(days=7)
     next_sunday = this_sunday + timedelta(days=7)
     fetched_events = calendar.search(
@@ -121,5 +128,9 @@ with caldav.DAVClient(
         expand = True
     )
     for event in fetched_events:
-        
-"""
+        event_data = {
+            "title":str(event.icalendar_component.get("summary")),
+            "start":event.icalendar_component.get("dtstart").dt,
+            "end":event.icalendar_component.get("dtend").dt
+        }
+        if event_data in shifts:
