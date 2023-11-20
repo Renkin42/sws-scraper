@@ -5,6 +5,7 @@ import re
 from datetime import datetime
 from datetime import timedelta
 import pytz
+import caldav
 
 def convert24(time_string):
     ampm = time_string[-1:]
@@ -92,8 +93,8 @@ for day in days:
         start_time, end_time = hours.get_text().split(" - ")
         start_hour, start_min = convert24(start_time)
         end_hour, end_min = convert24(end_time)
-        event_start = datetime(event_year, event_month, event_day, start_hour, start_min, tzinfo=tz)
-        event_end = datetime(event_year, event_month, event_day, end_hour, end_min, tzinfo=tz)
+        event_start = tz.localize(datetime(event_year, event_month, event_day, start_hour, start_min))
+        event_end = tz.localize(datetime(event_year, event_month, event_day, end_hour, end_min))
         job_string = day.find(string=re.compile("Job:")).split(".")[1]
         store_string = day.find(string=re.compile("Store:"))[7:]
 
@@ -134,3 +135,16 @@ with caldav.DAVClient(
             "end":event.icalendar_component.get("dtend").dt
         }
         if event_data in shifts:
+            #Remove event from the list if already on the calendar
+            shifts.remove(event_data)
+        else:
+            #If the calendar event isn't in the list the schedule has changed
+            #since the last run. Remove the orphaned event
+            event.delete()
+
+    for shift in shifts:
+        calendar.save_event(
+            dtstart = shift["start"],
+            dtend = shift["end"],
+            summary = shift["title"]
+        )
