@@ -6,6 +6,7 @@ from datetime import datetime
 from datetime import timedelta
 import pytz
 import caldav
+import logging
 
 def convert24(time_string):
     ampm = time_string[-1:]
@@ -22,16 +23,20 @@ def convert24(time_string):
 login_url = "https://myschedule.safeway.com/ESS/AuthN/Swylogin.aspx?ReturnUrl=%2fESS%2f"
 sw_id = os.getenv("SW_ID")
 sw_pass = os.getenv("SW_PASS")
-if os.getenv("TZ"):
-    tz = pytz.timezone(os.getenv("TZ"))
-else:
-    tz = pytz.utc
+tz = pytz.timezone(os.getenv("TZ", "UTC"))
+loglevel = os.getenv("LOGLEVEL", "WARNING").upper()
+logging.basicConfig(
+    level = getattr(logging, loglevel),
+    format = "[%(asctime)s][%(levelname)s]%(message)s",
+    datefmt = "%-m/%-d/%y %-I:%M:%S%p"
+)
 
 with requests.session() as s:
     req = s.get(login_url).text
     html = BeautifulSoup(req, "html.parser")
     viewstate = html.find("input", {"name":"__VIEWSTATE"}).attrs["value"]
     viewstategen = html.find("input", {"name":"__VIEWSTATEGENERATOR"}).attrs["value"]
+    logging.debug("Successfully got login page.")
 
 payload = {
     "__VIEWSTATE": viewstate,
@@ -103,7 +108,7 @@ for day in days:
             "start":event_start,
             "end":event_end
         }
-        print(event_data)
+        logging.debug(event_data)
         shifts.append(event_data)
 
 caldav_url = "http://localhost:5232/"
