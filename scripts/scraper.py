@@ -48,9 +48,7 @@ payload = {
 
 res = s.post(login_url, data=payload)
 res_html = BeautifulSoup(res.text, "html.parser")
-days = []
-for day in res_html.css.select("#calendar .dates .days .hours"):
-    days.append(day.parent)
+days = res_html.css.select("#calendar .dates .days>li")
 
 viewstate = res_html.find("input", {"name":"__VIEWSTATE"}).attrs["value"]
 viewstategen = res_html.find("input", {"name":"__VIEWSTATEGENERATOR"}).attrs["value"]
@@ -80,8 +78,7 @@ payload = {
 res = s.post(res.url, data=payload)
 res_html = BeautifulSoup(res.text, "html.parser")
 
-for day in res_html.css.select("#calendar .dates .days .hours"):
-    days.append(day.parent)
+days += res_html.css.select("#calendar .dates .days>li")
 
 shifts = []
 now = datetime.now()
@@ -95,21 +92,22 @@ for day in days:
         if now.month == 12 and event_month == 1:
             event_year += 1
         hours = day.find("span", {"class":"hours"})
-        start_time, end_time = hours.get_text().split(" - ")
-        start_hour, start_min = convert24(start_time)
-        end_hour, end_min = convert24(end_time)
-        event_start = tz.localize(datetime(event_year, event_month, event_day, start_hour, start_min))
-        event_end = tz.localize(datetime(event_year, event_month, event_day, end_hour, end_min))
-        job_string = day.find(string=re.compile("Job:")).split(".")[1]
-        store_string = day.find(string=re.compile("Store:"))[7:]
+        if hours:
+            start_time, end_time = hours.get_text().split(" - ")
+            start_hour, start_min = convert24(start_time)
+            end_hour, end_min = convert24(end_time)
+            event_start = tz.localize(datetime(event_year, event_month, event_day, start_hour, start_min))
+            event_end = tz.localize(datetime(event_year, event_month, event_day, end_hour, end_min))
+            job_string = day.find(string=re.compile("Job:")).split(".")[1]
+            store_string = day.find(string=re.compile("Store:"))[7:]
 
-        event_data = {
-            "title":"Work Safeway #" + store_string + ": " + job_string,
-            "start":event_start,
-            "end":event_end
-        }
-        logging.debug(event_data)
-        shifts.append(event_data)
+            event_data = {
+                "title":"Work Safeway #" + store_string + ": " + job_string,
+                "start":event_start,
+                "end":event_end
+            }
+            logging.debug(event_data)
+            shifts.append(event_data)
 
 caldav_url = "http://localhost:5232/"
 caldav_user = os.getenv("RADICALE_USER")
