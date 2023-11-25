@@ -8,18 +8,6 @@ import pytz
 import caldav
 import logging
 
-def convert24(time_string):
-    ampm = time_string[-1:]
-    hour, min = time_string[:-1].split(":")
-    hour = int(hour)
-    min = int(min)
-    if hour == 12:
-        if ampm == "a":
-            hour = 0
-    elif ampm == "p":
-        hour += 12
-    return [hour, min]
-
 login_url = "https://myschedule.safeway.com/ESS/AuthN/Swylogin.aspx?ReturnUrl=%2fESS%2f"
 sw_id = os.getenv("SW_ID")
 sw_pass = os.getenv("SW_PASS")
@@ -85,19 +73,16 @@ now = datetime.now()
 for day in days:
     date = day.find("div", {"class":"date"})
     if date:
-        event_year = now.year
-        event_month, event_day = date.get_text().split("/")[:2]
-        event_month = int(event_month)
-        event_day = int(event_day)
-        if now.month == 12 and event_month == 1:
-            event_year += 1
+        date_string = date.get_text()
+        if date_string.count("/") == 1:
+            date_string += "/" + str(now.year)
         hours = day.find("span", {"class":"hours"})
         if hours:
-            start_time, end_time = hours.get_text().split(" - ")
-            start_hour, start_min = convert24(start_time)
-            end_hour, end_min = convert24(end_time)
-            event_start = tz.localize(datetime(event_year, event_month, event_day, start_hour, start_min))
-            event_end = tz.localize(datetime(event_year, event_month, event_day, end_hour, end_min))
+            start_time, end_time = hours.get_text().upper().split(" - ")
+            start_time += "M " + date_string
+            end_time += "M " + date_string
+            event_start = tz.localize(datetime.strptime(start_time, "%I:%M%p %m/%d/%Y"))
+            event_end = tz.localize(datetime.strptime(end_time, "%I:%M%p %m/%d/%Y"))
             job_string = day.find(string=re.compile("Job:")).split(".")[1]
             store_string = day.find(string=re.compile("Store:"))[7:]
 
