@@ -22,6 +22,7 @@ Environment Variables
 
 - `SW_ID` : Employee ID Number
 - `SW_PASS` : Employee Password
-- `RADICALE_USER` : CalDAV Server Username
-- `RADICALE_PASSWORD` : CalDAV Server Password
+- `CALDAV_URL` : CalDAV Server URL
+- `CALDAV_USER` : CalDAV Server Username
+- `CALDAV_PASSWORD` : CalDAV Server Password
 - `TZ` : Time zone used for events

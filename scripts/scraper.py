@@ -104,9 +104,9 @@ try:
                 logging.debug(event_data)
                 shifts.append(event_data)
 
-    caldav_url = "http://localhost:5232/"
-    caldav_user = os.getenv("RADICALE_USER")
-    caldav_password = os.getenv("RADICALE_PASSWORD")
+    caldav_url = os.getenv("CALDAV_URL")
+    caldav_user = os.getenv("CALDAV_USER")
+    caldav_password = os.getenv("CALDAV_PASSWORD")
 
     with caldav.DAVClient(
         url = caldav_url,
