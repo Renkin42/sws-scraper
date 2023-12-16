@@ -40,7 +40,7 @@ try:
     res.raise_for_status()
     if res.url == base_url + "Schedule.aspx":
         logging.info("Successfully authenticated with id " + sw_id)
-    elif res.url == base_url + "/AuthN/SwyLoginError.aspx":
+    elif res.url == base_url + "AuthN/SwyLogInError.aspx":
         raise Exception("Failed to authenticate with id " + sw_id + ". Please ensure that credentials are up to date.")
     else:
         raise Exception("Unknown response URL: " + res.url)
