@@ -3,6 +3,7 @@ import requests
 import os
 import re
 from datetime import datetime
+from datetime import date
 from datetime import timedelta
 import pytz
 import caldav
@@ -39,9 +40,9 @@ try:
     res = s.post(login_url, data=payload, timeout=30)
     res.raise_for_status()
     if res.url == base_url + "Schedule.aspx":
-        logging.info("Successfully authenticated with id " + sw_id)
+        logging.info(f"Successfully authenticated with id {sw_id}.")
     elif res.url == base_url + "AuthN/SwyLogInError.aspx":
-        raise Exception("Failed to authenticate with id " + sw_id + ". Please ensure that credentials are up to date.")
+        raise Exception(f"Failed to authenticate with id {sw_id}. Please ensure that credentials are up to date.")
     else:
         raise Exception("Unknown response URL: " + res.url)
     res_html = BeautifulSoup(res.text, "html.parser")
@@ -49,9 +50,10 @@ try:
 
     viewstate = res_html.find("input", {"name":"__VIEWSTATE"}).attrs["value"]
     viewstategen = res_html.find("input", {"name":"__VIEWSTATEGENERATOR"}).attrs["value"]
-    this_sunday = datetime.now()
+    this_sunday = date.today()
     offset = 7 - (this_sunday.weekday() + 1) % 7
     this_sunday += timedelta(days = offset)
+    logging.info(this_sunday)
     payload = {
         "ctl00$Master_ScriptManager":"ctl00$masterPlaceHolder$UpdatePanel1|ctl00$masterPlaceHolder$txtWeekPeriodDate",
         "phTree":"ctl00_tpTransfer_phTree",
@@ -97,13 +99,15 @@ try:
                 store_string = day.find(string=re.compile("Store:"))[7:]
 
                 event_data = {
-                    "title":"Work Safeway #" + store_string + ": " + job_string,
+                    "title":f"Work Safeway #{store_string}: {job_string}",
                     "start":event_start,
                     "end":event_end
                 }
+                logging.debug("Parsed event from schedule")
                 logging.debug(event_data)
                 shifts.append(event_data)
 
+    logging.info(f"Parsed {len(shifts)} events from schedule")
     caldav_url = os.getenv("CALDAV_URL")
     caldav_user = os.getenv("CALDAV_USER")
     caldav_password = os.getenv("CALDAV_PASSWORD")
@@ -126,20 +130,32 @@ try:
             event = True,
             expand = True
         )
+
+        duplicate = 0
+        orphan = 0
+
         for event in fetched_events:
             event_data = {
                 "title":str(event.icalendar_component.get("summary")),
                 "start":event.icalendar_component.get("dtstart").dt,
                 "end":event.icalendar_component.get("dtend").dt
             }
+            logging.debug("Found event on calendar:")
+            logging.debug(event_data)
             if event_data in shifts:
                 #Remove event from the list if already on the calendar
+                duplicate += 1
+                logging.debug("Duplicate event found. Removing from list")
                 shifts.remove(event_data)
             else:
                 #If the calendar event isn't in the list the schedule has changed
                 #since the last run. Remove the orphaned event
+                orphan += 1
+                logging.debug("Event not found in schedule. Assuming orphaned and deleting")
                 event.delete()
 
+        logging.info(f"{orphan} Orphaned events detected and deleted from calendar")
+        logging.info(f"{duplicate} Duplicate events removed from list. Adding {len(shifts)} new events to calendar")
         for shift in shifts:
             calendar.save_event(
                 dtstart = shift["start"],
