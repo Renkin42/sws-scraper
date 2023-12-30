@@ -53,7 +53,6 @@ try:
     this_sunday = date.today()
     offset = 7 - (this_sunday.weekday() + 1) % 7
     this_sunday += timedelta(days = offset)
-    logging.info(this_sunday)
     payload = {
         "ctl00$Master_ScriptManager":"ctl00$masterPlaceHolder$UpdatePanel1|ctl00$masterPlaceHolder$txtWeekPeriodDate",
         "phTree":"ctl00_tpTransfer_phTree",
@@ -87,10 +86,10 @@ try:
         if date:
             date_string = date.get_text()
             if date_string.count("/") == 1:
-                #logging.info(date_string.split("/")[0])
-                #logging.info(now.month)
                 if int(date_string.split("/")[0]) == 1 and now.month == 12:
                     date_string += "/" + str(now.year+1)
+                elif int(date_string.split("/")[0]) == 12 and now.month == 1:
+                    date_string += "/" + str(now.year-1)
                 else:
                     date_string += "/" + str(now.year)
             hours = day.find("span", {"class":"hours"})
