@@ -87,7 +87,12 @@ try:
         if date:
             date_string = date.get_text()
             if date_string.count("/") == 1:
-                date_string += "/" + str(now.year)
+                #logging.info(date_string.split("/")[0])
+                #logging.info(now.month)
+                if int(date_string.split("/")[0]) == 1 and now.month == 12:
+                    date_string += "/" + str(now.year+1)
+                else:
+                    date_string += "/" + str(now.year)
             hours = day.find("span", {"class":"hours"})
             if hours:
                 start_time, end_time = hours.get_text().upper().split(" - ")
