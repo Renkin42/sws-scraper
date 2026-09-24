@@ -1,4 +1,5 @@
 FROM debian:stable-slim
+LABEL org.opencontainers.image.source="https://github.com/Renkin42/sws-scraper"
 MAINTAINER Austin Leydecker
 
 #Install dependencies
