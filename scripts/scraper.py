@@ -24,7 +24,7 @@ logging.basicConfig(
 )
 
 @repeat(every(2).hours)
-def scrape()
+def scrape():
     try:
         with requests.session() as s:
             req = s.get(login_url, timeout=30)
