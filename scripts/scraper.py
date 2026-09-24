@@ -155,7 +155,7 @@ def scrape():
                     duplicate += 1
                     logging.debug("Duplicate event found. Removing from list")
                     shifts.remove(event_data)
-                else:
+               # else:
                     #If the calendar event isn't in the list the schedule has changed
                     #since the last run. Remove the orphaned event
                     #orphan += 1
