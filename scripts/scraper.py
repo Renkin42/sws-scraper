@@ -173,6 +173,8 @@ def scrape():
     except Exception as e:
         logging.error(e)
 
+#run on container start
+scrape()
 while True:
     run_pending()
     time.sleep(1)
