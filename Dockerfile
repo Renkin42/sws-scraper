@@ -1,18 +1,15 @@
-FROM debian:stable-slim
+FROM python:3.12-slim
 LABEL org.opencontainers.image.source="https://github.com/Renkin42/sws-scraper"
 MAINTAINER Austin Leydecker
 
 #Install dependencies
-RUN apt update
-RUN apt install -y cron python3-pip python3-venv
+RUN apt install -y cron
 
 #Add directories 
 RUN mkdir /scripts/
-#Create virtual environment
-RUN python3 -m venv /venv
 #Add python
 ADD scripts/requirements.txt /scripts/
-RUN /venv/bin/pip install -r /scripts/requirements.txt
+RUN pip install -r /scripts/requirements.txt
 
 #Add crontab
 ADD scraper-cron /etc/cron.d/scraper-cron
