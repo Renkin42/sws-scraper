@@ -3,7 +3,7 @@ LABEL org.opencontainers.image.source="https://github.com/Renkin42/sws-scraper"
 MAINTAINER Austin Leydecker
 
 #Install dependencies
-RUN apt install -y cron
+#RUN apt install -y cron
 
 #Add directories 
 RUN mkdir /scripts/
