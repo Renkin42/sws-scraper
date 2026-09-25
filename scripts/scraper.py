@@ -86,9 +86,9 @@ def scrape():
         shifts = []
         now = datetime.now()
         for day in days:
-            date = day.find("div", {"class":"date"})
-            if date:
-                date_string = date.get_text()
+            shiftdate = day.find("div", {"class":"date"})
+            if shiftdate:
+                date_string = shiftdate.get_text()
                 if date_string.count("/") == 1:
                     if int(date_string.split("/")[0]) == 1 and now.month == 12:
                         date_string += "/" + str(now.year+1)
@@ -98,7 +98,7 @@ def scrape():
                         date_string += "/" + str(now.year)
                 hours = day.find("span", {"class":"hours"})
                 if hours:
-                    start_time, end_time = hours.get_text().upper().split(" - ")
+                    start_time, end_time = hours.get_text().removesuffix(" *").upper().split(" - ")
                     start_time += "M " + date_string
                     end_time += "M " + date_string
                     event_start = tz.localize(datetime.strptime(start_time, "%I:%M%p %m/%d/%Y"))
@@ -155,14 +155,6 @@ def scrape():
                     duplicate += 1
                     logging.debug("Duplicate event found. Removing from list")
                     shifts.remove(event_data)
-               # else:
-                    #If the calendar event isn't in the list the schedule has changed
-                    #since the last run. Remove the orphaned event
-                    #orphan += 1
-                    #logging.debug("Event not found in schedule. Assuming orphaned and deleting")
-                    #event.delete()
-
-            #logging.info(f"{orphan} Orphaned events detected and deleted from calendar")
             logging.info(f"{duplicate} Duplicate events removed from list. Adding {len(shifts)} new events to calendar")
             for shift in shifts:
                 calendar.save_event(

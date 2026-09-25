@@ -98,7 +98,7 @@ def scrape():
                         date_string += "/" + str(now.year)
                 hours = day.find("span", {"class":"hours"})
                 if hours:
-                    start_time, end_time = hours.get_text().upper().split(" - ")
+                    start_time, end_time = hours.get_text().removesuffix(" *").upper().split(" - ")
                     start_time += "M " + date_string
                     end_time += "M " + date_string
                     event_start = tz.localize(datetime.strptime(start_time, "%I:%M%p %m/%d/%Y"))
