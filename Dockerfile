@@ -5,10 +5,10 @@ MAINTAINER Austin Leydecker
 WORKDIR /app
 
 #Add python requirements
-ADD scripts/requirements.txt .
+ADD requirements.txt .
 RUN pip install -r requirements.txt
 
 #Add python script
-ADD scripts/scraper.py .
+ADD scraper.py .
 
 ENTRYPOINT ["python", "scraper.py"]
